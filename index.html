@@ -33,9 +33,9 @@
     /* PERBAIKAN CSS RATA KIRI DAN UKURAN FONT */
     .cert-field-name {
       position: absolute;
-      left: 23%; /* RATA KIRI */
+      left: 7.5%; /* RATA KIRI */
       width: 60%;
-      bottom: 49.3%; /* DIGESER TURUN SEDIKIT AGAR PAS DI ATAS GARIS */
+      bottom: 53%; /* DIGESER TURUN SEDIKIT AGAR PAS DI ATAS GARIS */
       text-align: left; /* RATA KIRI */
       font-weight: 800; /* BOLD */
       color: #0d2137;
@@ -49,11 +49,11 @@
     }
     .cert-field-station {
       position: absolute;
-      left: 23%; /* RATA KIRI */
+      left: 32%; /* RATA KIRI */
       width: 40%;
-      bottom: 40.55%;
+      bottom: 41.5%;
       text-align: left; /* RATA KIRI */
-      font-weight: 700;
+      font-weight: 600;
       color: #0d2137;
       font-size: 2.3cqw; /* DIPERBESAR */
       letter-spacing: 0.02em;
@@ -62,11 +62,11 @@
     }
     .cert-field-score {
       position: absolute;
-      left: 23%; /* RATA KIRI */
+      left: 32%; /* RATA KIRI */
       width: 40%;
-      bottom: 32.9%;
+      bottom: 36.5%;
       text-align: left; /* RATA KIRI */
-      font-weight: 800;
+      font-weight: 600;
       color: #0d2137;
       font-size: 2.3cqw; /* DIPERBESAR */
       letter-spacing: 0.03em;
@@ -75,11 +75,11 @@
     }
     .cert-field-date {
       position: absolute;
-      left: 23%; 
+      left: 32%; 
       width: 40%;
-      bottom: 27.8%; 
+      bottom: 31.25%; 
       text-align: left; 
-      font-weight: 800; /* Diubah menjadi 800 seperti score */
+      font-weight: 600; /* Diubah menjadi 800 seperti score */
       color: #0d2137;
       font-size: 2.3cqw; /* Diubah menjadi 2.3cqw seperti score */
       letter-spacing: 0.03em;
@@ -719,6 +719,7 @@
     }
 
     // PDF ENGINE (DIPERBAIKI UNTUK TAMPILAN RATA KIRI DAN FONT INTER)
+    // PDF ENGINE (DIPERBAIKI MENGIKUTI CSS TERBARU)
     async function renderCertificateToDataUrl(crewName, stationLabel, scoreVal, dateVal) {
       return new Promise((resolve, reject) => {
         const canvas = document.createElement("canvas");
@@ -735,25 +736,27 @@
           // SET RATA KIRI PADA CANVAS
           ctx.textAlign = "left";
           
-          let fontSizeName = 48; // DIPERBESAR SEDIKIT LAGI DI CANVAS
+          // RENDER NAMA (Font 800, Posisi Left 7.5% = ~132px, Bottom 53% = ~583px)
+          let fontSizeName = 48; 
           ctx.font = `800 ${fontSizeName}px "Inter", sans-serif`;
           const maxNameWidth = 900;
           while (ctx.measureText(String(crewName).toUpperCase()).width > maxNameWidth && fontSizeName > 22) {
             fontSizeName -= 2;
             ctx.font = `800 ${fontSizeName}px "Inter", sans-serif`;
           }
-          // KOORDINAT X: 403 ADALAH KIRA-KIRA 23% DARI 1755
-          ctx.fillText(String(crewName).toUpperCase(), 403, 618);
+          ctx.fillText(String(crewName).toUpperCase(), 130, 580);
 
-          ctx.font = `700 40px "Inter", sans-serif`;
-          ctx.fillText(String(stationLabel), 403, 730);
+          // RENDER STATION (Font 600, Posisi Left 32% = ~562px, Bottom 41.5% = ~725px)
+          ctx.font = `600 40px "Inter", sans-serif`;
+          ctx.fillText(String(stationLabel), 562, 717);
 
-          ctx.font = `800 40px "Inter", sans-serif`;
-          ctx.fillText(String(scoreVal), 403, 825);
+          // RENDER SCORE (Font 600, Posisi Left 32% = ~562px, Bottom 36.5% = ~787px)
+          ctx.font = `600 40px "Inter", sans-serif`;
+          ctx.fillText(String(scoreVal), 562, 778);
 
-          // RENDER TANGGAL (Y DITURUNKAN SEDIKIT)
-          ctx.font = `800 40px "Inter", sans-serif`; // Font dan ketebalan disamakan dengan score
-          ctx.fillText(String(dateVal), 403, 888);
+          // RENDER TANGGAL (Font 600, Posisi Left 32% = ~562px, Bottom 31.25% = ~853px)
+          ctx.font = `600 40px "Inter", sans-serif`; 
+          ctx.fillText(String(dateVal), 562, 843); 
 
           resolve(canvas.toDataURL("image/jpeg", 0.95));
         };
