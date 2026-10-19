@@ -107,8 +107,8 @@
     </div>
   </header>
 
-  <!-- FILTER BAR -->
-  <section class="bg-white sticky top-14 z-20 shadow-sm border-b border-gray-200">
+  <!-- FILTER BAR (Garis Bawah & Shadow Dihilangkan Sepenuhnya) -->
+  <section class="bg-white sticky top-14 z-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
       <div class="w-full md:w-[340px]">
         <input id="searchInput" type="text" placeholder="Search NIP or Name..." oninput="applyFilters()" class="w-full px-3 py-2 border border-gray-300 text-xs text-gray-900 placeholder-gray-400 bg-white" />
@@ -376,7 +376,7 @@
     function postDataLoad() {
       populateStoreDropdown();
       populateStationDropdown();
-      applyFilters(); // Fungsi ini akan meng-update KPI, memanggil generateSpecialCards, dan list kru
+      applyFilters(); 
     }
 
     function populateStoreDropdown() {
@@ -405,7 +405,6 @@
       `;
     }
 
-    // Fungsi update Summary yang menggunakan data tersaring khusus untuk KPI bar
     function updateSummaryKPIs(baseData) {
       let totalCerts = 0;
       let fullCertifiedCount = 0;
@@ -424,7 +423,6 @@
       document.getElementById("statTotalStores").textContent = stores.size;
     }
 
-    // Generate Card menggunakan baseData agar angkanya berubah sesuai filter dropdown
     function generateSpecialCards(baseData) {
         let pendingHTML = '';
         let talentHTML = '';
@@ -491,7 +489,6 @@
         } else {
             specialFilter = { type, stationKey };
         }
-        // Panggil applyFilters untuk mengalkulasi dan merender ulang semuanya
         applyFilters();
     }
 
@@ -501,7 +498,6 @@
       const statusVal = document.getElementById("statusFilter").value;
       const stationVal = document.getElementById("stationFilter").value;
 
-      // 1. Data difilter hanya oleh dropdown dan search bar (Base Filter)
       const baseFilteredData = allCrewData.filter(crew => {
         const matchSearch = !q ||
           String(crew.name).toLowerCase().includes(q) ||
@@ -519,11 +515,9 @@
         return matchSearch && matchStore && matchStation && matchStatus;
       });
 
-      // 2. Terapkan perhitungan Card Score dan KPI berdasarkan Base Filter
       updateSummaryKPIs(baseFilteredData);
       generateSpecialCards(baseFilteredData);
 
-      // 3. Terapkan Filter Spesial (dari Klik Card) KHUSUS untuk List Kru di bawah
       filteredCrewData = baseFilteredData.filter(crew => {
         let matchSpecial = true;
         if (specialFilter) {
@@ -544,10 +538,8 @@
         return matchSpecial;
       });
 
-      // Lakukan Sorting
-      if (statusVal === "FULL") {
-         filteredCrewData.sort((a, b) => getPassedStations(b).length - getPassedStations(a).length);
-      }
+      // Lakukan Sorting Ranking (Paling banyak lulus di atas) secara default untuk semua kondisi
+      filteredCrewData.sort((a, b) => getPassedStations(b).length - getPassedStations(a).length);
 
       document.getElementById("filteredCountBadge").textContent = `${filteredCrewData.length} records`;
       renderCrewDirectory();
