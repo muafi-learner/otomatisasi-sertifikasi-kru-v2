@@ -107,24 +107,32 @@
     </div>
   </header>
 
-  <!-- FILTER BAR (SEKARANG TIDAK STICKY, BISA DI-SCROLL) -->
+  <!-- FILTER BAR (SEKARANG TIDAK STICKY, BISA DI-SCROLL, TANPA BORDER) -->
   <section class="bg-white border-none shadow-none">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
-      <div class="w-full md:w-[340px]">
+      <div class="w-full md:flex-1">
         <input id="searchInput" type="text" placeholder="Search NIP or Name..." oninput="applyFilters()" class="w-full px-3 py-2 border border-gray-300 text-xs text-gray-900 placeholder-gray-400 bg-white" />
       </div>
       <div class="w-full md:w-auto flex flex-col sm:flex-row items-center gap-2.5">
-        <select id="storeFilter" onchange="applyFilters()" class="w-full sm:w-[170px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+        <select id="storeFilter" onchange="applyFilters()" class="w-full sm:w-[140px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
           <option value="ALL">All Stores</option>
         </select>
-        <select id="statusFilter" onchange="applyFilters()" class="w-full sm:w-[170px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
-          <option value="ALL">All Status</option>
+        <select id="statusFilter" onchange="applyFilters()" class="w-full sm:w-[140px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+          <option value="ALL">All Overall Status</option>
           <option value="FULL">Full Certified</option>
           <option value="HAS_CERT">Has Certificate</option>
           <option value="NO_CERT">No Certificate</option>
         </select>
-        <select id="stationFilter" onchange="applyFilters()" class="w-full sm:w-[170px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+        <select id="stationFilter" onchange="applyFilters()" class="w-full sm:w-[140px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
           <option value="ALL">All Stations</option>
+        </select>
+        <!-- NEW MECE FILTER -->
+        <select id="clearanceFilter" onchange="applyFilters()" class="w-full sm:w-[160px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+          <option value="ALL">All Clearance</option>
+          <option value="BASE_ALL">Base Crew (All)</option>
+          <option value="BASE_CERTIFIED">Base Crew (Certified)</option>
+          <option value="BASE_PENDING">Base Crew (Pending)</option>
+          <option value="TALENT">Talent Pool</option>
         </select>
       </div>
     </div>
@@ -152,12 +160,12 @@
     </div>
   </section>
 
-  <!-- ACCORDION 1: PENDING STATION CLEARANCE -->
+  <!-- ACCORDION 1: BASE STATION COMPLETENESS -->
   <section class="bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <details class="group" open>
         <summary class="flex items-center gap-1.5 py-3 cursor-pointer list-none select-none text-[10px] font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-900">
-          <span>Pending Station Clearance</span>
+          <span>Base Station Completeness</span>
           <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
           </svg>
@@ -243,7 +251,6 @@
     // PASTE BASE64 GAMBAR SERTIFIKAT BARU-MU DI BAWAH INI (di dalam tanda kutip)
     const CERT_BG_BASE64 = "__GANTI_DENGAN_KODE_BASE64_GAMBAR_SEBELUMNYA__";
 
-    // Urutan Station sesuai dengan yang ada di Screenshot
     const STATIONS_CONFIG = [
       { key: "leader",       label: "Leader",        fullLabel: "Store / Shift Leader" },
       { key: "barista",      label: "Barista",       fullLabel: "Central Bar - Barista" },
@@ -254,7 +261,6 @@
       { key: "clearUp",      label: "Clear Up",      fullLabel: "Back Bar - Clear Up" }
     ];
 
-    // Urutan untuk Clearance Matrix di kartu profil kanan
     const MATRIX_STATIONS_ORDER = [
       { key: "cashier",      label: "Cashier",       fullLabel: "Front Bar - Cashier" },
       { key: "orderChecker", label: "Order Checker", fullLabel: "Front Bar - Order Checker" },
@@ -265,36 +271,44 @@
       { key: "leader",       label: "Leaders",       fullLabel: "Store / Shift Leader" }
     ];
 
-    // API URL DENGAN TYPO YANG SUDAH DIKOREKSI SESUAI SCREENSHOT
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby4tN3yo3-5Z7o_9aIOuoSsfkY2wI0ryZplL09LdT1cxYU9ClieXWZxokMp-EFIqrPK/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby4tN3yo3-5Z7o_9alOuoSsfkY2wl0ryZplL09LdT1cxYU9ClieXWZxoKMp-EFlqrPK/exec";
 
     let allCrewData = [];
     let filteredCrewData = [];
     let activeCrewNip = null;
-    let specialFilter = null; // { type: 'pending'|'talent', stationKey: '...' }
+
+    // Helpers untuk MECE Filter Logic
+    function getCrewBaseStationKey(crew) {
+        if (!crew.baseStation) return null;
+        const base = crew.baseStation.toUpperCase();
+        if (base.includes('LEADER') || base.includes('SPV') || base.includes('MANAGER')) return 'leader';
+        if (base.includes('BARISTA')) return 'barista';
+        if (base.includes('PREP')) return 'preparation';
+        if (base.includes('STOCK') || base.includes('KEEPER')) return 'stockKeeper';
+        if (base.includes('CASHIER')) return 'cashier';
+        if (base.includes('ORDER CHECKER') || base.includes('CHECKER')) return 'orderChecker';
+        if (base.includes('CLEAR UP')) return 'clearUp';
+        return null;
+    }
 
     function checkIsBaseStation(crew, stKey) {
-        if (!crew.baseStation) return false;
-        const base = crew.baseStation.toUpperCase();
-        switch(stKey) {
-            case 'leader': return base.includes('LEADER') || base.includes('SPV') || base.includes('MANAGER');
-            case 'barista': return base.includes('BARISTA');
-            case 'preparation': return base.includes('PREP');
-            case 'stockKeeper': return base.includes('STOCK') || base.includes('KEEPER');
-            case 'cashier': return base.includes('CASHIER');
-            case 'orderChecker': return base.includes('ORDER CHECKER') || base.includes('CHECKER');
-            case 'clearUp': return base.includes('CLEAR UP');
-            default: return false;
+        return getCrewBaseStationKey(crew) === stKey;
+    }
+
+    function checkIsPassed(crew, stKey) {
+        const stData = crew.stations && crew.stations[stKey];
+        const isLulus = stData && String(stData.status).trim().toUpperCase() === "LULUS";
+        if (stKey === 'leader') {
+            return isLulus && getPassedStations(crew).length >= 7;
         }
+        return isLulus;
     }
 
     function getPassedStations(crew) {
-      return MATRIX_STATIONS_ORDER.filter(st => {
-        const data = crew.stations && crew.stations[st.key];
-        return data && String(data.status).trim().toUpperCase() === "LULUS";
-      }).map(st => ({
+      return MATRIX_STATIONS_ORDER.filter(st => checkIsPassed(crew, st.key)).map(st => ({
         ...st,
-        score: crew.stations[st.key].score || "-"
+        score: crew.stations[st.key].score || "-",
+        date: crew.stations[st.key].date || "-" 
       }));
     }
 
@@ -327,7 +341,6 @@
 
       if(force) {
           activeCrewNip = null;
-          specialFilter = null; // Reset filter ketika Sync
           renderEmptySelection();
           document.getElementById("crewListContainer").innerHTML = `<div class="p-6 text-center text-sm text-gray-400">Syncing data...</div>`;
       }
@@ -435,46 +448,30 @@
 
             baseData.forEach(crew => {
                 const isBase = checkIsBaseStation(crew, st.key);
-                const stData = crew.stations && crew.stations[st.key];
-                const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
+                const isPassed = checkIsPassed(crew, st.key);
 
                 if (isBase) {
                     totalBase++;
                     if (isPassed) passedBase++;
                 } else {
-                    if (isPassed) {
-                      if (st.key === 'leader') {
-                        const allPassedCount = getPassedStations(crew).length;
-                        if (allPassedCount >= 7) talentCount++;
-                      } else {
-                        talentCount++;
-                      }
-                    }
+                    if (isPassed) talentCount++;
                 }
             });
 
+            // Card menjadi statis (tanpa cursor-pointer & hover effect)
             let completionRate = totalBase === 0 ? 0 : Math.round((passedBase / totalBase) * 100);
-            const isPendingActive = specialFilter && specialFilter.type === 'pending' && specialFilter.stationKey === st.key;
-            
             pendingHTML += `
-              <div onclick="toggleSpecialFilter('pending', '${st.key}')" 
-                   class="p-4 border border-gray-200 cursor-pointer transition flex flex-col items-start justify-center text-left ${
-                     isPendingActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-white hover:bg-gray-50 text-gray-900'
-                   }">
-                <p class="text-[10px] font-semibold uppercase tracking-wider ${isPendingActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
-                <p class="text-3xl font-regular mt-1">${completionRate}%</p>
+              <div class="p-4 border border-gray-200 flex flex-col items-start justify-center text-left bg-white">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">${st.label}</p>
+                <p class="text-3xl font-regular mt-1 text-gray-900">${completionRate}%</p>
               </div>
             `;
 
             if (['leader', 'barista', 'preparation'].includes(st.key)) {
-                const isTalentActive = specialFilter && specialFilter.type === 'talent' && specialFilter.stationKey === st.key;
                 talentHTML += `
-                  <div onclick="toggleSpecialFilter('talent', '${st.key}')" 
-                       class="p-4 border border-gray-200 cursor-pointer transition flex flex-col items-start justify-center text-left ${
-                         isTalentActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-white hover:bg-gray-50 text-gray-900'
-                       }">
-                    <p class="text-[10px] font-semibold uppercase tracking-wider ${isTalentActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
-                    <p class="text-3xl font-regular mt-1">${talentCount}</p>
+                  <div class="p-4 border border-gray-200 flex flex-col items-start justify-center text-left bg-white">
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500">${st.label}</p>
+                    <p class="text-3xl font-regular mt-1 text-gray-900">${talentCount}</p>
                   </div>
                 `;
             }
@@ -484,28 +481,20 @@
         document.getElementById("talentPoolCards").innerHTML = talentHTML;
     }
 
-    function toggleSpecialFilter(type, stationKey) {
-        if (specialFilter && specialFilter.type === type && specialFilter.stationKey === stationKey) {
-            specialFilter = null;
-        } else {
-            specialFilter = { type, stationKey };
-        }
-        applyFilters();
-    }
-
     function applyFilters() {
       const q = document.getElementById("searchInput").value.trim().toLowerCase();
       const storeVal = document.getElementById("storeFilter").value;
       const statusVal = document.getElementById("statusFilter").value;
       const stationVal = document.getElementById("stationFilter").value;
+      const clearanceVal = document.getElementById("clearanceFilter").value;
 
-      const baseFilteredData = allCrewData.filter(crew => {
+      // 1. FILTER GLOBAL (Hanya dipengaruhi Search, Store, & Status) untuk KPI Card & Summary
+      const globalFilteredData = allCrewData.filter(crew => {
         const matchSearch = !q ||
           String(crew.name).toLowerCase().includes(q) ||
           String(crew.nip).toLowerCase().includes(q) ||
           String(crew.storeCode).toLowerCase().includes(q);
         const matchStore = storeVal === "ALL" || crew.store === storeVal;
-        const matchStation = stationVal === "ALL" || checkIsBaseStation(crew, stationVal);
 
         const passed = getPassedStations(crew);
         let matchStatus = true;
@@ -513,33 +502,60 @@
         else if (statusVal === "HAS_CERT") matchStatus = passed.length >= 1;
         else if (statusVal === "NO_CERT") matchStatus = passed.length === 0;
 
-        return matchSearch && matchStore && matchStation && matchStatus;
+        return matchSearch && matchStore && matchStatus;
       });
 
-      updateSummaryKPIs(baseFilteredData);
-      generateSpecialCards(baseFilteredData);
+      // Update Angka di Semua Kartu menggunakan Data Global
+      updateSummaryKPIs(globalFilteredData);
+      generateSpecialCards(globalFilteredData);
 
-      filteredCrewData = baseFilteredData.filter(crew => {
-        let matchSpecial = true;
-        if (specialFilter) {
-            const isBase = checkIsBaseStation(crew, specialFilter.stationKey);
-            const stData = crew.stations && crew.stations[specialFilter.stationKey];
-            const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
+      // 2. FILTER SPESIFIK LIST KRU (Dipengaruhi oleh Target Station & Clearance Status)
+      filteredCrewData = globalFilteredData.filter(crew => {
+        let matchClearance = true;
+        
+        if (stationVal !== "ALL") {
+            const isBase = checkIsBaseStation(crew, stationVal);
+            const isPassed = checkIsPassed(crew, stationVal);
+
+            if (clearanceVal === "BASE_ALL") {
+                matchClearance = isBase;
+            } else if (clearanceVal === "BASE_CERTIFIED") {
+                matchClearance = isBase && isPassed;
+            } else if (clearanceVal === "BASE_PENDING") {
+                matchClearance = isBase && !isPassed;
+            } else if (clearanceVal === "TALENT") {
+                matchClearance = !isBase && isPassed;
+            } else if (clearanceVal === "ALL") {
+                // ALL Clearance: Tampilkan Base Crew ATAU Talent
+                matchClearance = isBase || isPassed; 
+            }
+        } else {
+            // Jika Target Station = ALL, evaluasi berdasarkan jabatan aslinya masing-masing
+            const baseKey = getCrewBaseStationKey(crew);
+            const isPassedBase = baseKey ? checkIsPassed(crew, baseKey) : false;
             
-            if (specialFilter.type === 'pending') {
-                matchSpecial = isBase && !isPassed;
-            } else if (specialFilter.type === 'talent') {
-                if (specialFilter.stationKey === 'leader') {
-                  matchSpecial = !isBase && isPassed && getPassedStations(crew).length >= 7;
-                } else {
-                  matchSpecial = !isBase && isPassed;
+            let isTalentAnywhere = false;
+            STATIONS_CONFIG.forEach(st => {
+                if (st.key !== baseKey && checkIsPassed(crew, st.key)) {
+                    isTalentAnywhere = true;
                 }
+            });
+
+            if (clearanceVal === "BASE_ALL") {
+                matchClearance = true; // Semua kru punya jabatan
+            } else if (clearanceVal === "BASE_CERTIFIED") {
+                matchClearance = isPassedBase;
+            } else if (clearanceVal === "BASE_PENDING") {
+                matchClearance = !isPassedBase;
+            } else if (clearanceVal === "TALENT") {
+                matchClearance = isTalentAnywhere;
             }
         }
-        return matchSpecial;
+
+        return matchClearance;
       });
 
-      // Sorting Ranking
+      // Lakukan Sorting Ranking
       filteredCrewData.sort((a, b) => getPassedStations(b).length - getPassedStations(a).length);
 
       document.getElementById("filteredCountBadge").textContent = `${filteredCrewData.length} records`;
@@ -623,7 +639,7 @@
 
       const pillsEl = document.getElementById("stationMatrixPills");
       pillsEl.innerHTML = MATRIX_STATIONS_ORDER.map(st => {
-        const stData = (crew.stations && crew.stations[st.key]) || { status: "BELUM SERTIFIKASI", score: "" };
+        const stData = (crew.stations && crew.stations[st.key]) || { status: "BELUM SERTIFIKASI", score: "", date: "" };
         const isPassed = String(stData.status).trim().toUpperCase() === "LULUS";
         const scoreText = stData.score || "-";
 
@@ -685,7 +701,7 @@
     }
 
     // PDF ENGINE
-    async function renderCertificateToDataUrl(crewName, stationLabel, scoreVal) {
+    async function renderCertificateToDataUrl(crewName, stationLabel, scoreVal, dateVal) {
       return new Promise((resolve, reject) => {
         const canvas = document.createElement("canvas");
         canvas.width = 1755;
@@ -714,6 +730,9 @@
           ctx.font = `800 36px "Plus Jakarta Sans", sans-serif`;
           ctx.fillText(String(scoreVal), (555 + 1058) / 2, 822);
 
+          ctx.font = `600 24px "Plus Jakarta Sans", sans-serif`;
+          ctx.fillText(String(dateVal), (555 + 1058) / 2, 880);
+
           resolve(canvas.toDataURL("image/jpeg", 0.95));
         };
         bgImg.onerror = reject;
@@ -728,10 +747,11 @@
 
       const stData = crew.stations[stationKey];
       const scoreVal = stData && stData.score !== "" ? stData.score : "-";
+      const dateVal = stData && stData.date !== "" ? stData.date : "-";
 
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      const dataUrl = await renderCertificateToDataUrl(crew.name, st.label, scoreVal);
+      const dataUrl = await renderCertificateToDataUrl(crew.name, st.label, scoreVal, dateVal);
 
       pdf.addImage(dataUrl, "JPEG", 0, 0, 297, 210);
       const safeName = crew.name.replace(/[^a-zA-Z0-9]/g, "_");
@@ -754,7 +774,7 @@
       for (let i = 0; i < passed.length; i++) {
         if (i > 0) pdf.addPage("a4", "landscape");
         const st = passed[i];
-        const dataUrl = await renderCertificateToDataUrl(crew.name, st.label, st.score);
+        const dataUrl = await renderCertificateToDataUrl(crew.name, st.label, st.score, st.date);
         pdf.addImage(dataUrl, "JPEG", 0, 0, 297, 210);
       }
 
