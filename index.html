@@ -88,7 +88,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- TOP NAVBAR (FULL WIDTH PUTIH) -->
+  <!-- TOP NAVBAR -->
   <header id="topNavbar" class="bg-white border-b border-gray-200 sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -107,8 +107,8 @@
     </div>
   </header>
 
-  <!-- FILTER BAR (FULL WIDTH PUTIH) -->
-  <section class="bg-white border-b border-gray-200 sticky top-14 z-20">
+  <!-- FILTER BAR (Tanpa Border Bawah) -->
+  <section class="bg-white sticky top-14 z-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
       <div class="w-full md:w-[340px]">
         <input id="searchInput" type="text" placeholder="Search NIP or Name..." oninput="applyFilters()" class="w-full px-3 py-2 border border-gray-300 text-xs text-gray-900 placeholder-gray-400 bg-white" />
@@ -130,7 +130,7 @@
     </div>
   </section>
 
-  <!-- KPI SUMMARY BAR (FULL WIDTH PUTIH) -->
+  <!-- KPI SUMMARY BAR -->
   <section class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="p-4 border border-gray-200 bg-gray-50 flex flex-col">
@@ -152,7 +152,7 @@
     </div>
   </section>
 
-  <!-- ACCORDION 1: PENDING STATION CLEARANCE (FULL WIDTH PUTIH) -->
+  <!-- ACCORDION 1: PENDING STATION CLEARANCE -->
   <section class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <details class="group">
@@ -169,7 +169,7 @@
     </div>
   </section>
 
-  <!-- ACCORDION 2: TALENT POOL (FULL WIDTH PUTIH) -->
+  <!-- ACCORDION 2: TALENT POOL -->
   <section class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <details class="group">
@@ -186,7 +186,7 @@
     </div>
   </section>
 
-  <!-- MAIN WORKSPACE (AREA ABU-ABU) -->
+  <!-- MAIN WORKSPACE -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
@@ -243,7 +243,7 @@
     // PASTE BASE64 GAMBAR SERTIFIKAT BARU-MU DI BAWAH INI (di dalam tanda kutip)
     const CERT_BG_BASE64 = "__GANTI_DENGAN_KODE_BASE64_GAMBAR_SEBELUMNYA__";
 
-    // Urutan untuk kartu Pending Station Clearance & Talent Pool
+    // Urutan Station sesuai dengan yang ada di Screenshot
     const STATIONS_CONFIG = [
       { key: "leader",       label: "Leader",        fullLabel: "Store / Shift Leader" },
       { key: "barista",      label: "Barista",       fullLabel: "Central Bar - Barista" },
@@ -272,19 +272,20 @@
     let activeCrewNip = null;
     let specialFilter = null; // { type: 'pending'|'talent', stationKey: '...' }
 
+    // Utility untuk cek BaseStation dari Database terhadap Station Key Web
     function checkIsBaseStation(crew, stKey) {
-      if (!crew.baseStation) return false;
-      const base = crew.baseStation.toUpperCase();
-      switch(stKey) {
-        case 'leader': return base.includes('LEADER') || base.includes('SPV') || base.includes('MANAGER');
-        case 'barista': return base.includes('BARISTA');
-        case 'preparation': return base.includes('PREP');
-        case 'stockKeeper': return base.includes('STOCK') || base.includes('KEEPER');
-        case 'cashier': return base.includes('CASHIER');
-        case 'orderChecker': return base.includes('ORDER CHECKER') || base.includes('CHECKER');
-        case 'clearUp': return base.includes('CLEAR UP');
-        default: return false;
-      }
+        if (!crew.baseStation) return false;
+        const base = crew.baseStation.toUpperCase();
+        switch(stKey) {
+            case 'leader': return base.includes('LEADER') || base.includes('SPV') || base.includes('MANAGER');
+            case 'barista': return base.includes('BARISTA');
+            case 'preparation': return base.includes('PREP');
+            case 'stockKeeper': return base.includes('STOCK') || base.includes('KEEPER');
+            case 'cashier': return base.includes('CASHIER');
+            case 'orderChecker': return base.includes('ORDER CHECKER') || base.includes('CHECKER');
+            case 'clearUp': return base.includes('CLEAR UP');
+            default: return false;
+        }
     }
 
     function getPassedStations(crew) {
@@ -324,11 +325,11 @@
       const syncIcon = document.getElementById("syncIcon");
       if (syncIcon) syncIcon.classList.add("animate-spin");
 
-      if (force) {
-        activeCrewNip = null;
-        specialFilter = null;
-        renderEmptySelection();
-        document.getElementById("crewListContainer").innerHTML = `<div class="p-6 text-center text-sm text-gray-400">Syncing data...</div>`;
+      if(force) {
+          activeCrewNip = null;
+          specialFilter = null; // Reset filter ketika Sync
+          renderEmptySelection();
+          document.getElementById("crewListContainer").innerHTML = `<div class="p-6 text-center text-sm text-gray-400">Syncing data...</div>`;
       }
 
       if (GAS_WEB_APP_URL && GAS_WEB_APP_URL.startsWith("http")) {
@@ -349,6 +350,8 @@
           }
         } catch (err) {
           console.warn("Failed to fetch live data:", err);
+          
+          // Gunakan cache jika internet/API bermasalah
           const cachedData = localStorage.getItem("kintoun_crew_data");
           if (cachedData) {
             try {
@@ -383,7 +386,7 @@
     function populateStoreDropdown() {
       const select = document.getElementById("storeFilter");
       const stores = Array.from(new Set(allCrewData.map(c => c.store).filter(Boolean))).sort();
-      select.innerHTML = '<option value="ALL">All Stores (' + stores.length + ')</option>';
+      select.innerHTML = '<option value="ALL">All Stores</option>';
       stores.forEach(st => {
         const opt = document.createElement("option");
         opt.value = st;
@@ -424,75 +427,77 @@
       document.getElementById("statTotalStores").textContent = stores.size;
     }
 
+    // Pembuatan Kartu Pending Clearance & Talent Pool Rata Kiri
     function generateSpecialCards() {
-      let pendingHTML = '';
-      let talentHTML = '';
+        let pendingHTML = '';
+        let talentHTML = '';
 
-      STATIONS_CONFIG.forEach(st => {
-        let totalBase = 0;
-        let passedBase = 0;
-        let talentCount = 0;
+        STATIONS_CONFIG.forEach(st => {
+            let totalBase = 0;
+            let passedBase = 0;
+            let talentCount = 0;
 
-        allCrewData.forEach(crew => {
-          const isBase = checkIsBaseStation(crew, st.key);
-          const stData = crew.stations && crew.stations[st.key];
-          const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
+            allCrewData.forEach(crew => {
+                const isBase = checkIsBaseStation(crew, st.key);
+                const stData = crew.stations && crew.stations[st.key];
+                const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
 
-          if (isBase) {
-            totalBase++;
-            if (isPassed) passedBase++;
-          } else {
-            if (isPassed) {
-              if (st.key === 'leader') {
-                // Untuk masuk talent pool leader, wajib lulus 6 station dasar + lulus leader (7/7)
-                const allPassedCount = getPassedStations(crew).length;
-                if (allPassedCount >= 7) talentCount++;
-              } else {
-                talentCount++;
-              }
+                if (isBase) {
+                    totalBase++;
+                    if (isPassed) passedBase++;
+                } else {
+                    if (isPassed) {
+                      if (st.key === 'leader') {
+                        const allPassedCount = getPassedStations(crew).length;
+                        if (allPassedCount >= 7) talentCount++;
+                      } else {
+                        talentCount++;
+                      }
+                    }
+                }
+            });
+
+            // Pending Station Card (Visual Rata Kiri)
+            let completionRate = totalBase === 0 ? 0 : Math.round((passedBase / totalBase) * 100);
+            const isPendingActive = specialFilter && specialFilter.type === 'pending' && specialFilter.stationKey === st.key;
+            
+            pendingHTML += `
+              <div onclick="toggleSpecialFilter('pending', '${st.key}')" 
+                   class="p-4 border border-gray-200 cursor-pointer transition flex flex-col items-start justify-center text-left ${
+                     isPendingActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 hover:bg-gray-100 text-gray-900'
+                   }">
+                <p class="text-[10px] font-semibold uppercase tracking-wider ${isPendingActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
+                <p class="text-2xl font-semibold mt-1">${completionRate}%</p>
+              </div>
+            `;
+
+            // Talent Pool Card (Hanya Leader, Barista, Preparation, Visual Rata Kiri)
+            if (['leader', 'barista', 'preparation'].includes(st.key)) {
+                const isTalentActive = specialFilter && specialFilter.type === 'talent' && specialFilter.stationKey === st.key;
+                talentHTML += `
+                  <div onclick="toggleSpecialFilter('talent', '${st.key}')" 
+                       class="p-4 border border-gray-200 cursor-pointer transition flex flex-col items-start justify-center text-left ${
+                         isTalentActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 hover:bg-gray-100 text-gray-900'
+                       }">
+                    <p class="text-[10px] font-semibold uppercase tracking-wider ${isTalentActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
+                    <p class="text-2xl font-semibold mt-1">${talentCount}</p>
+                  </div>
+                `;
             }
-          }
         });
 
-        let completionRate = totalBase === 0 ? 0 : Math.round((passedBase / totalBase) * 100);
-        const isPendingActive = specialFilter && specialFilter.type === 'pending' && specialFilter.stationKey === st.key;
-        
-        pendingHTML += `
-          <div onclick="toggleSpecialFilter('pending', '${st.key}')" 
-               class="p-4 border border-gray-200 cursor-pointer transition flex flex-col items-center justify-center text-center ${
-                 isPendingActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 hover:bg-gray-100 text-gray-900'
-               }">
-            <p class="text-[10px] font-semibold uppercase tracking-wider ${isPendingActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
-            <p class="text-2xl font-semibold mt-1">${completionRate}%</p>
-          </div>
-        `;
-
-        if (['leader', 'barista', 'preparation'].includes(st.key)) {
-          const isTalentActive = specialFilter && specialFilter.type === 'talent' && specialFilter.stationKey === st.key;
-          talentHTML += `
-            <div onclick="toggleSpecialFilter('talent', '${st.key}')" 
-                 class="p-4 border border-gray-200 cursor-pointer transition flex flex-col items-center justify-center text-center ${
-                   isTalentActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 hover:bg-gray-100 text-gray-900'
-                 }">
-              <p class="text-[10px] font-semibold uppercase tracking-wider ${isTalentActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
-              <p class="text-2xl font-semibold mt-1">${talentCount}</p>
-            </div>
-          `;
-        }
-      });
-
-      document.getElementById("pendingClearanceCards").innerHTML = pendingHTML;
-      document.getElementById("talentPoolCards").innerHTML = talentHTML;
+        document.getElementById("pendingClearanceCards").innerHTML = pendingHTML;
+        document.getElementById("talentPoolCards").innerHTML = talentHTML;
     }
 
     function toggleSpecialFilter(type, stationKey) {
-      if (specialFilter && specialFilter.type === type && specialFilter.stationKey === stationKey) {
-        specialFilter = null;
-      } else {
-        specialFilter = { type, stationKey };
-      }
-      generateSpecialCards();
-      applyFilters();
+        if (specialFilter && specialFilter.type === type && specialFilter.stationKey === stationKey) {
+            specialFilter = null; // Matikan filter jika di-klik lagi
+        } else {
+            specialFilter = { type, stationKey }; // Aktifkan filter baru
+        }
+        generateSpecialCards(); 
+        applyFilters();
     }
 
     function applyFilters() {
@@ -502,6 +507,7 @@
       const stationVal = document.getElementById("stationFilter").value;
 
       filteredCrewData = allCrewData.filter(crew => {
+        // Standard Filters
         const matchSearch = !q ||
           String(crew.name).toLowerCase().includes(q) ||
           String(crew.nip).toLowerCase().includes(q) ||
@@ -515,28 +521,32 @@
         else if (statusVal === "HAS_CERT") matchStatus = passed.length >= 1;
         else if (statusVal === "NO_CERT") matchStatus = passed.length === 0;
 
+        // Special Card Filters Logic
         let matchSpecial = true;
         if (specialFilter) {
-          const isBase = checkIsBaseStation(crew, specialFilter.stationKey);
-          const stData = crew.stations && crew.stations[specialFilter.stationKey];
-          const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
-          
-          if (specialFilter.type === 'pending') {
-            matchSpecial = isBase && !isPassed;
-          } else if (specialFilter.type === 'talent') {
-            if (specialFilter.stationKey === 'leader') {
-              matchSpecial = !isBase && isPassed && passed.length >= 7;
-            } else {
-              matchSpecial = !isBase && isPassed;
+            const isBase = checkIsBaseStation(crew, specialFilter.stationKey);
+            const stData = crew.stations && crew.stations[specialFilter.stationKey];
+            const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
+            
+            if (specialFilter.type === 'pending') {
+                // Tampilkan yang menjabat tapi BELUM lulus
+                matchSpecial = isBase && !isPassed;
+            } else if (specialFilter.type === 'talent') {
+                // Tampilkan yang TIDAK menjabat tapi SUDAH lulus
+                if (specialFilter.stationKey === 'leader') {
+                  matchSpecial = !isBase && isPassed && passed.length >= 7;
+                } else {
+                  matchSpecial = !isBase && isPassed;
+                }
             }
-          }
         }
 
         return matchSearch && matchStore && matchStation && matchStatus && matchSpecial;
       });
 
+      // Sorting Ranking
       if (statusVal === "FULL") {
-        filteredCrewData.sort((a, b) => getPassedStations(b).length - getPassedStations(a).length);
+         filteredCrewData.sort((a, b) => getPassedStations(b).length - getPassedStations(a).length);
       }
 
       document.getElementById("filteredCountBadge").textContent = `${filteredCrewData.length} records`;
