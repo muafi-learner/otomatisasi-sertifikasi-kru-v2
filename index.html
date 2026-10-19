@@ -309,18 +309,7 @@
 
     function checkIsPassed(crew, stKey) {
         const stData = crew.stations && crew.stations[stKey];
-        const isLulus = stData && String(stData.status).trim().toUpperCase() === "LULUS";
-        if (!isLulus) return false;
-
-        if (stKey === 'leader') {
-            let totalLulus = 0;
-            STATIONS_CONFIG.forEach(s => {
-                const d = crew.stations && crew.stations[s.key];
-                if (d && String(d.status).trim().toUpperCase() === "LULUS") totalLulus++;
-            });
-            return totalLulus >= 7;
-        }
-        return true;
+        return stData && String(stData.status).trim().toUpperCase() === "LULUS";
     }
 
     function getPassedStations(crew) {
