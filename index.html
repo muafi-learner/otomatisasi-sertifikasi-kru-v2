@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kintoun Academy — Certification</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
@@ -88,7 +88,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- TOP NAVBAR (TETAP STICKY) -->
+  <!-- TOP NAVBAR -->
   <header id="topNavbar" class="bg-white border-b border-gray-200 sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -107,23 +107,23 @@
     </div>
   </header>
 
-  <!-- FILTER BAR (SEKARANG TIDAK STICKY, BISA DI-SCROLL) -->
+  <!-- FILTER BAR -->
   <section class="bg-white border-none shadow-none">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
-      <div class="w-full md:w-[340px]">
+      <div class="w-full md:flex-1">
         <input id="searchInput" type="text" placeholder="Search NIP or Name..." oninput="applyFilters()" class="w-full px-3 py-2 border border-gray-300 text-xs text-gray-900 placeholder-gray-400 bg-white" />
       </div>
       <div class="w-full md:w-auto flex flex-col sm:flex-row items-center gap-2.5">
-        <select id="storeFilter" onchange="applyFilters()" class="w-full sm:w-[170px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+        <select id="storeFilter" onchange="applyFilters()" class="w-full sm:w-[140px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
           <option value="ALL">All Stores</option>
         </select>
-        <select id="statusFilter" onchange="applyFilters()" class="w-full sm:w-[170px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+        <select id="statusFilter" onchange="applyFilters()" class="w-full sm:w-[140px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
           <option value="ALL">All Overall Status</option>
           <option value="FULL">Full Certified</option>
           <option value="HAS_CERT">Has Certificate</option>
           <option value="NO_CERT">No Certificate</option>
         </select>
-        <select id="stationFilter" onchange="applyFilters()" class="w-full sm:w-[170px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+        <select id="stationFilter" onchange="applyFilters()" class="w-full sm:w-[140px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
           <option value="ALL">All Stations</option>
         </select>
         <select id="clearanceFilter" onchange="applyFilters()" class="w-full sm:w-[160px] px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
@@ -270,13 +270,12 @@
       { key: "leader",       label: "Leaders",       fullLabel: "Store / Shift Leader" }
     ];
 
-    // MENGGUNAKAN URL API TERBARU SESUAI SCREENSHOT
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw_JDkZb6UkgHS3VklOzxBkhl6fB1N_w4LopwcjX_of6AaY-ZDN1_LQvsWKJrsRBA3S/exec";
+    // API URL DENGAN TYPO YANG SUDAH DIKOREKSI
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyW51XDqBlj_JTcqMpsuZwvGLB7RfFMkpFoLViUG_nsfJaapnbvjv3jrq2D9m5nJ4M9/exec";
 
     let allCrewData = [];
     let filteredCrewData = [];
     let activeCrewNip = null;
-    let specialFilter = null; // { type: 'pending'|'talent', stationKey: '...' }
 
     function checkIsBaseStation(crew, stKey) {
         if (!crew.baseStation) return false;
@@ -331,7 +330,6 @@
         if (base.includes('CLEAR UP')) return 'clearUp';
         return null;
     }
-    // ----------------------------------------------------------------------
 
     async function initApp() {
       const cachedData = localStorage.getItem("kintoun_crew_data");
@@ -479,7 +477,6 @@
                 }
             });
 
-            // Card statis, tidak ada fungsi onclick
             let completionRate = totalBase === 0 ? 0 : Math.round((passedBase / totalBase) * 100);
             pendingHTML += `
               <div class="p-4 border border-gray-200 flex flex-col items-start justify-center text-left bg-white text-gray-900">
@@ -488,7 +485,6 @@
               </div>
             `;
 
-            // Card statis, tidak ada fungsi onclick (Hanya untuk leader, barista, preparation)
             if (['leader', 'barista', 'preparation'].includes(st.key)) {
                 talentHTML += `
                   <div class="p-4 border border-gray-200 flex flex-col items-start justify-center text-left bg-white text-gray-900">
@@ -510,7 +506,6 @@
       const stationVal = document.getElementById("stationFilter").value;
       const clearanceVal = document.getElementById("clearanceFilter").value;
 
-      // 1. FILTER GLOBAL (Hanya dipengaruhi Search, Store, & Status) untuk KPI Card & Summary
       const globalFilteredData = allCrewData.filter(crew => {
         const matchSearch = !q ||
           String(crew.name).toLowerCase().includes(q) ||
@@ -527,11 +522,9 @@
         return matchSearch && matchStore && matchStatus;
       });
 
-      // Update Angka di Semua Kartu menggunakan Data Global
       updateSummaryKPIs(globalFilteredData);
       generateSpecialCards(globalFilteredData);
 
-      // 2. FILTER SPESIFIK LIST KRU (Dipengaruhi oleh Target Station & Clearance Status)
       filteredCrewData = globalFilteredData.filter(crew => {
         let matchClearance = true;
         
@@ -548,11 +541,9 @@
             } else if (clearanceVal === "TALENT") {
                 matchClearance = !isBase && isPassed;
             } else if (clearanceVal === "ALL") {
-                // ALL Clearance: Tampilkan Base Crew ATAU Talent
                 matchClearance = isBase || (!isBase && isPassed); 
             }
         } else {
-            // Jika Target Station = ALL, evaluasi berdasarkan jabatan aslinya masing-masing
             const baseObj = STATIONS_CONFIG.find(s => checkIsBaseStation(crew, s.key));
             const baseKey = baseObj ? baseObj.key : null;
             const isPassedBase = baseKey ? checkIsPassed(crew, baseKey) : false;
@@ -565,7 +556,7 @@
             });
 
             if (clearanceVal === "BASE_ALL") {
-                matchClearance = true; // Semua kru punya jabatan
+                matchClearance = true; 
             } else if (clearanceVal === "BASE_CERTIFIED") {
                 matchClearance = isPassedBase;
             } else if (clearanceVal === "BASE_PENDING") {
@@ -578,7 +569,6 @@
         return matchClearance;
       });
 
-      // Lakukan Sorting Ranking
       filteredCrewData.sort((a, b) => getPassedStations(b).length - getPassedStations(a).length);
 
       document.getElementById("filteredCountBadge").textContent = `${filteredCrewData.length} records`;
@@ -723,7 +713,7 @@
       document.getElementById("btnDownloadAll").classList.add("hidden");
     }
 
-    // PDF ENGINE (DENGAN TANGGAL LULUS DI Y: 880)
+    // PDF ENGINE
     async function renderCertificateToDataUrl(crewName, stationLabel, scoreVal, dateVal) {
       return new Promise((resolve, reject) => {
         const canvas = document.createElement("canvas");
