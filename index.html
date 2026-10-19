@@ -107,7 +107,7 @@
     </div>
   </header>
 
-  <!-- FILTER BAR (Tanpa Border Bawah) -->
+  <!-- FILTER BAR -->
   <section class="bg-white sticky top-14 z-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
       <div class="w-full md:w-[340px]">
@@ -131,31 +131,31 @@
   </section>
 
   <!-- KPI SUMMARY BAR -->
-  <section class="bg-white border-b border-gray-200">
+  <section class="bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="p-4 border border-gray-200 bg-gray-50 flex flex-col">
+      <div class="p-4 border border-gray-200 bg-white flex flex-col items-start justify-center text-left">
         <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Total Kru</p>
-        <p id="statTotalCrew" class="text-2xl font-light text-gray-900 mt-1">0</p>
+        <p id="statTotalCrew" class="text-3xl font-semibold mt-1">0</p>
       </div>
-      <div class="p-4 border border-gray-200 bg-gray-50 flex flex-col">
+      <div class="p-4 border border-gray-200 bg-white flex flex-col items-start justify-center text-left">
         <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Sertifikat Terbit</p>
-        <p id="statTotalCerts" class="text-2xl font-light text-gray-900 mt-1">0</p>
+        <p id="statTotalCerts" class="text-3xl font-semibold mt-1">0</p>
       </div>
-      <div class="p-4 border border-gray-200 bg-gray-50 flex flex-col">
+      <div class="p-4 border border-gray-200 bg-white flex flex-col items-start justify-center text-left">
         <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Full Certified</p>
-        <p id="statFullCrew" class="text-2xl font-light text-gray-900 mt-1">0</p>
+        <p id="statFullCrew" class="text-3xl font-semibold mt-1">0</p>
       </div>
-      <div class="p-4 border border-gray-200 bg-gray-50 flex flex-col">
+      <div class="p-4 border border-gray-200 bg-white flex flex-col items-start justify-center text-left">
         <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Cabang Store</p>
-        <p id="statTotalStores" class="text-2xl font-light text-gray-900 mt-1">0</p>
+        <p id="statTotalStores" class="text-3xl font-semibold mt-1">0</p>
       </div>
     </div>
   </section>
 
   <!-- ACCORDION 1: PENDING STATION CLEARANCE -->
-  <section class="bg-white border-b border-gray-200">
+  <section class="bg-white border-b border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <details class="group">
+      <details class="group" open>
         <summary class="flex items-center gap-1.5 py-3 cursor-pointer list-none select-none text-[10px] font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-900">
           <span>Pending Station Clearance</span>
           <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,7 +172,7 @@
   <!-- ACCORDION 2: TALENT POOL -->
   <section class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <details class="group">
+      <details class="group" open>
         <summary class="flex items-center gap-1.5 py-3 cursor-pointer list-none select-none text-[10px] font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-900">
           <span>Talent Pool</span>
           <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,7 +272,6 @@
     let activeCrewNip = null;
     let specialFilter = null; // { type: 'pending'|'talent', stationKey: '...' }
 
-    // Utility untuk cek BaseStation dari Database terhadap Station Key Web
     function checkIsBaseStation(crew, stKey) {
         if (!crew.baseStation) return false;
         const base = crew.baseStation.toUpperCase();
@@ -351,7 +350,6 @@
         } catch (err) {
           console.warn("Failed to fetch live data:", err);
           
-          // Gunakan cache jika internet/API bermasalah
           const cachedData = localStorage.getItem("kintoun_crew_data");
           if (cachedData) {
             try {
@@ -378,9 +376,7 @@
     function postDataLoad() {
       populateStoreDropdown();
       populateStationDropdown();
-      updateSummaryKPIs();
-      generateSpecialCards();
-      applyFilters();
+      applyFilters(); // Fungsi ini akan meng-update KPI, memanggil generateSpecialCards, dan list kru
     }
 
     function populateStoreDropdown() {
@@ -409,26 +405,27 @@
       `;
     }
 
-    function updateSummaryKPIs() {
+    // Fungsi update Summary yang menggunakan data tersaring khusus untuk KPI bar
+    function updateSummaryKPIs(baseData) {
       let totalCerts = 0;
       let fullCertifiedCount = 0;
       const stores = new Set();
 
-      allCrewData.forEach(c => {
+      baseData.forEach(c => {
         if (c.store) stores.add(c.store);
         const passed = getPassedStations(c);
         totalCerts += passed.length;
         if (passed.length >= 6) fullCertifiedCount++;
       });
 
-      document.getElementById("statTotalCrew").textContent = allCrewData.length;
+      document.getElementById("statTotalCrew").textContent = baseData.length;
       document.getElementById("statTotalCerts").textContent = totalCerts;
       document.getElementById("statFullCrew").textContent = fullCertifiedCount;
       document.getElementById("statTotalStores").textContent = stores.size;
     }
 
-    // Pembuatan Kartu Pending Clearance & Talent Pool Rata Kiri
-    function generateSpecialCards() {
+    // Generate Card menggunakan baseData agar angkanya berubah sesuai filter dropdown
+    function generateSpecialCards(baseData) {
         let pendingHTML = '';
         let talentHTML = '';
 
@@ -437,7 +434,7 @@
             let passedBase = 0;
             let talentCount = 0;
 
-            allCrewData.forEach(crew => {
+            baseData.forEach(crew => {
                 const isBase = checkIsBaseStation(crew, st.key);
                 const stData = crew.stations && crew.stations[st.key];
                 const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
@@ -457,30 +454,28 @@
                 }
             });
 
-            // Pending Station Card (Visual Rata Kiri)
             let completionRate = totalBase === 0 ? 0 : Math.round((passedBase / totalBase) * 100);
             const isPendingActive = specialFilter && specialFilter.type === 'pending' && specialFilter.stationKey === st.key;
             
             pendingHTML += `
               <div onclick="toggleSpecialFilter('pending', '${st.key}')" 
                    class="p-4 border border-gray-200 cursor-pointer transition flex flex-col items-start justify-center text-left ${
-                     isPendingActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 hover:bg-gray-100 text-gray-900'
+                     isPendingActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-white hover:bg-gray-50 text-gray-900'
                    }">
                 <p class="text-[10px] font-semibold uppercase tracking-wider ${isPendingActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
-                <p class="text-2xl font-semibold mt-1">${completionRate}%</p>
+                <p class="text-3xl font-semibold mt-1">${completionRate}%</p>
               </div>
             `;
 
-            // Talent Pool Card (Hanya Leader, Barista, Preparation, Visual Rata Kiri)
             if (['leader', 'barista', 'preparation'].includes(st.key)) {
                 const isTalentActive = specialFilter && specialFilter.type === 'talent' && specialFilter.stationKey === st.key;
                 talentHTML += `
                   <div onclick="toggleSpecialFilter('talent', '${st.key}')" 
                        class="p-4 border border-gray-200 cursor-pointer transition flex flex-col items-start justify-center text-left ${
-                         isTalentActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-gray-50 hover:bg-gray-100 text-gray-900'
+                         isTalentActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-white hover:bg-gray-50 text-gray-900'
                        }">
                     <p class="text-[10px] font-semibold uppercase tracking-wider ${isTalentActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
-                    <p class="text-2xl font-semibold mt-1">${talentCount}</p>
+                    <p class="text-3xl font-semibold mt-1">${talentCount}</p>
                   </div>
                 `;
             }
@@ -492,11 +487,11 @@
 
     function toggleSpecialFilter(type, stationKey) {
         if (specialFilter && specialFilter.type === type && specialFilter.stationKey === stationKey) {
-            specialFilter = null; // Matikan filter jika di-klik lagi
+            specialFilter = null;
         } else {
-            specialFilter = { type, stationKey }; // Aktifkan filter baru
+            specialFilter = { type, stationKey };
         }
-        generateSpecialCards(); 
+        // Panggil applyFilters untuk mengalkulasi dan merender ulang semuanya
         applyFilters();
     }
 
@@ -506,8 +501,8 @@
       const statusVal = document.getElementById("statusFilter").value;
       const stationVal = document.getElementById("stationFilter").value;
 
-      filteredCrewData = allCrewData.filter(crew => {
-        // Standard Filters
+      // 1. Data difilter hanya oleh dropdown dan search bar (Base Filter)
+      const baseFilteredData = allCrewData.filter(crew => {
         const matchSearch = !q ||
           String(crew.name).toLowerCase().includes(q) ||
           String(crew.nip).toLowerCase().includes(q) ||
@@ -521,7 +516,15 @@
         else if (statusVal === "HAS_CERT") matchStatus = passed.length >= 1;
         else if (statusVal === "NO_CERT") matchStatus = passed.length === 0;
 
-        // Special Card Filters Logic
+        return matchSearch && matchStore && matchStation && matchStatus;
+      });
+
+      // 2. Terapkan perhitungan Card Score dan KPI berdasarkan Base Filter
+      updateSummaryKPIs(baseFilteredData);
+      generateSpecialCards(baseFilteredData);
+
+      // 3. Terapkan Filter Spesial (dari Klik Card) KHUSUS untuk List Kru di bawah
+      filteredCrewData = baseFilteredData.filter(crew => {
         let matchSpecial = true;
         if (specialFilter) {
             const isBase = checkIsBaseStation(crew, specialFilter.stationKey);
@@ -529,22 +532,19 @@
             const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
             
             if (specialFilter.type === 'pending') {
-                // Tampilkan yang menjabat tapi BELUM lulus
                 matchSpecial = isBase && !isPassed;
             } else if (specialFilter.type === 'talent') {
-                // Tampilkan yang TIDAK menjabat tapi SUDAH lulus
                 if (specialFilter.stationKey === 'leader') {
-                  matchSpecial = !isBase && isPassed && passed.length >= 7;
+                  matchSpecial = !isBase && isPassed && getPassedStations(crew).length >= 7;
                 } else {
                   matchSpecial = !isBase && isPassed;
                 }
             }
         }
-
-        return matchSearch && matchStore && matchStation && matchStatus && matchSpecial;
+        return matchSpecial;
       });
 
-      // Sorting Ranking
+      // Lakukan Sorting
       if (statusVal === "FULL") {
          filteredCrewData.sort((a, b) => getPassedStations(b).length - getPassedStations(a).length);
       }
