@@ -75,13 +75,13 @@
     }
     .cert-field-date {
       position: absolute;
-      left: 23%; /* RATA KIRI */
+      left: 23%; 
       width: 40%;
-      bottom: 27.8%; /* DIGESER TURUN AGAR PAS DI GARIS TANGGAL */
-      text-align: left; /* RATA KIRI */
-      font-weight: 600;
+      bottom: 27.8%; 
+      text-align: left; 
+      font-weight: 800; /* Diubah menjadi 800 seperti score */
       color: #0d2137;
-      font-size: 1.8cqw; /* DIPERBESAR */
+      font-size: 2.3cqw; /* Diubah menjadi 2.3cqw seperti score */
       letter-spacing: 0.03em;
       line-height: 1.1;
       white-space: nowrap;
@@ -751,8 +751,9 @@
           ctx.font = `800 40px "Inter", sans-serif`;
           ctx.fillText(String(scoreVal), 403, 825);
 
-          ctx.font = `600 32px "Inter", sans-serif`;
-          ctx.fillText(String(dateVal), 403, 888); // Y DITURUNKAN SEDIKIT
+          // RENDER TANGGAL (Y DITURUNKAN SEDIKIT)
+          ctx.font = `800 40px "Inter", sans-serif`; // Font dan ketebalan disamakan dengan score
+          ctx.fillText(String(dateVal), 403, 888);
 
           resolve(canvas.toDataURL("image/jpeg", 0.95));
         };
