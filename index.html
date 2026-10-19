@@ -200,7 +200,7 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
-      <!-- LEFT PANEL: DIRECTORY -->
+      <!-- LEFT PANEL: DIRECTORY (KOTAK KUNING - TETAP STICKY) -->
       <aside class="lg:col-span-4 bg-white border border-gray-200 flex flex-col h-[calc(100vh-100px)] sticky top-20">
         <div class="p-3.5 border-b border-gray-200 flex items-center justify-between bg-white">
           <h2 class="text-[11px] font-semibold text-gray-900 uppercase tracking-wider">Direktori Kru</h2>
@@ -212,9 +212,11 @@
       </aside>
 
       <!-- RIGHT PANEL: DETAILS & CERTIFICATES -->
-      <section class="lg:col-span-8 space-y-6">
+      <!-- Diubah menjadi flex container tinggi penuh seperti Left Panel -->
+      <section class="lg:col-span-8 flex flex-col h-[calc(100vh-100px)] sticky top-20">
 
-        <div id="crewHeaderCard" class="bg-white border border-gray-200 p-6">
+        <!-- KOTAK MERAH: CREW HEADER (STATIS DI ATAS) -->
+        <div id="crewHeaderCard" class="bg-white border border-gray-200 p-6 shrink-0 z-10 shadow-sm relative">
           <div class="flex justify-between items-start">
             <div>
               <div class="flex items-center gap-2 mb-2 flex-wrap">
@@ -240,9 +242,12 @@
           </div>
         </div>
 
-        <!-- Certificates Grid -->
-        <div id="certificatesGrid" class="space-y-6">
-          <!-- Populated by JS -->
+        <!-- AREA SCROLL: SERTIFIKAT DI BAWAH KOTAK MERAH -->
+        <!-- Menambahkan overflow-y-auto agar bagian ini saja yang nge-scroll -->
+        <div class="flex-1 overflow-y-auto mt-6 pb-6">
+          <div id="certificatesGrid" class="space-y-6">
+            <!-- Populated by JS -->
+          </div>
         </div>
 
       </section>
