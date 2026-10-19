@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kintoun Academy — Certification</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+      color: #111827;
+    }
+    .font-cert {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .cert-canvas {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1755 / 1240;
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      background-color: #ffffff;
+      container-type: inline-size;
+    }
+    .cert-field-name {
+      position: absolute;
+      left: 7.98%;
+      width: 52.53%;
+      bottom: 49.6%;
+      text-align: center;
+      font-weight: 800;
+      color: #0d2137;
+      font-size: 2.35cqw;
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 0.5cqw;
+    }
+    .cert-field-station {
+      position: absolute;
+      left: 31.85%;
+      width: 28.66%;
+      bottom: 40.55%;
+      text-align: center;
+      font-weight: 700;
+      color: #0d2137;
+      font-size: 1.95cqw;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+    .cert-field-score {
+      position: absolute;
+      left: 31.62%;
+      width: 28.66%;
+      bottom: 32.9%;
+      text-align: center;
+      font-weight: 800;
+      color: #0d2137;
+      font-size: 2.15cqw;
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    
+    input:focus, select:focus {
+        outline: none;
+        border-color: #111827;
+        box-shadow: none;
+    }
+    /* Hide scrollbar for horizontal scroll areas */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP NAVBAR -->
+  <header id="topNavbar" class="bg-white border-b border-gray-200 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-gray-900 flex items-center justify-center text-white font-bold text-xs">KA</div>
+        <div><h1 class="font-semibold text-sm tracking-tight text-gray-900">KINTOUN ACADEMY</h1></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="dataSourceBadge" class="px-2.5 py-1 text-[10px] font-semibold tracking-wider bg-gray-100 text-gray-600 border border-gray-200">
+          CONNECTING
+        </span>
+        <button onclick="refreshData(true)" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium hover:bg-black transition">
+          <svg id="syncIcon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Sync
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- FILTER BAR -->
+  <div class="bg-white border-b border-gray-200 py-3 sticky top-0 z-20 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-3">
+      <div class="flex-1">
+        <input id="searchInput" type="text" placeholder="Search NIP or Name..." oninput="applyFilters()" class="w-full px-3 py-2 border border-gray-300 text-xs text-gray-900 placeholder-gray-400" />
+      </div>
+      <div class="flex-1 md:max-w-[200px]">
+        <select id="storeFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+          <option value="ALL">All Stores</option>
+        </select>
+      </div>
+      <div class="flex-1 md:max-w-[200px]">
+        <select id="statusFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+          <option value="ALL">All Status</option>
+          <option value="FULL">Full Certified</option>
+          <option value="HAS_CERT">Has Certificate</option>
+          <option value="NO_CERT">No Certificate</option>
+        </select>
+      </div>
+      <div class="flex-1 md:max-w-[200px]">
+        <select id="stationFilter" onchange="applyFilters()" class="w-full px-3 py-2 border border-gray-300 text-xs text-gray-700 bg-white">
+          <option value="ALL">All Stations</option>
+          <!-- Populated by JS dynamically based on actual BaseStations -->
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- KPI SUMMARY BAR -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="p-4 border border-gray-200 bg-gray-50 flex flex-col">
+        <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Total Kru</p>
+        <p id="statTotalCrew" class="text-2xl font-light text-gray-900 mt-1">0</p>
+      </div>
+      <div class="p-4 border border-gray-200 bg-gray-50 flex flex-col">
+        <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Sertifikat Terbit</p>
+        <p id="statTotalCerts" class="text-2xl font-light text-gray-900 mt-1">0</p>
+      </div>
+      <div class="p-4 border border-gray-200 bg-gray-50 flex flex-col">
+        <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Full Certified</p>
+        <p id="statFullCrew" class="text-2xl font-light text-gray-900 mt-1">0</p>
+      </div>
+      <div class="p-4 border border-gray-200 bg-gray-50 flex flex-col">
+        <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Cabang Store</p>
+        <p id="statTotalStores" class="text-2xl font-light text-gray-900 mt-1">0</p>
+      </div>
+    </div>
+
+    <!-- ACCORDIONS: PENDING STATION CLEARANCE & TALENT POOL -->
+    <div class="space-y-4 mb-6">
+      
+      <!-- Pending Clearance -->
+      <details class="group bg-white border-b border-gray-200">
+        <summary class="flex items-center gap-2 font-medium cursor-pointer list-none py-2 text-[10px] text-gray-500 uppercase tracking-wider select-none">
+          <span>Pending Station Clearance</span>
+          <span class="transition group-open:rotate-180">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </span>
+        </summary>
+        <div class="py-4 flex overflow-x-auto no-scrollbar gap-4" id="pendingClearanceCards">
+          <!-- Populated by JS -->
+        </div>
+      </details>
+
+      <!-- Talent Pool -->
+      <details class="group bg-white border-b border-gray-200">
+        <summary class="flex items-center gap-2 font-medium cursor-pointer list-none py-2 text-[10px] text-gray-500 uppercase tracking-wider select-none">
+          <span>Talent Pool</span>
+          <span class="transition group-open:rotate-180">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </span>
+        </summary>
+        <div class="py-4 flex overflow-x-auto no-scrollbar gap-4" id="talentPoolCards">
+          <!-- Populated by JS -->
+        </div>
+      </details>
+
+    </div>
+
+    <!-- SPLIT VIEW -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- LEFT PANEL: DIRECTORY -->
+      <aside class="lg:col-span-4 bg-white border border-gray-200 flex flex-col h-[calc(100vh-280px)] sticky top-[130px]">
+        <div class="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+          <h2 class="text-[10px] font-semibold text-gray-900 uppercase tracking-wider">Direktori Kru</h2>
+          <span id="filteredCountBadge" class="text-[10px] text-gray-500">0 records</span>
+        </div>
+        <div id="crewListContainer" class="flex-1 overflow-y-auto bg-white">
+          <!-- Populated by JS -->
+        </div>
+      </aside>
+
+      <!-- RIGHT PANEL: DETAILS & CERTIFICATES -->
+      <section class="lg:col-span-8 space-y-6">
+
+        <div id="crewHeaderCard" class="bg-white border border-gray-200 p-6">
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <span id="activeCrewNip" class="text-[10px] font-mono font-medium text-gray-500 border border-gray-200 px-1.5 py-0.5">NIP: -</span>
+                <span id="activeCrewStore" class="text-[10px] font-medium text-gray-600 bg-gray-100 px-1.5 py-0.5">-</span>
+                <span id="activeCrewStation" class="text-[10px] font-medium text-gray-600 bg-gray-100 px-1.5 py-0.5">-</span>
+                <span id="activeCrewFullBadge" class="hidden text-[10px] font-bold text-white bg-gray-900 px-1.5 py-0.5">FULL CERTIFIED</span>
+              </div>
+              <h2 id="activeCrewName" class="text-2xl font-semibold text-gray-900 tracking-tight uppercase">Select Crew</h2>
+              <p id="activeCrewSub" class="text-sm text-gray-500 mt-1">Sertifikat otomatis di-render berdasarkan kelulusan station.</p>
+            </div>
+            <button id="btnDownloadAll" onclick="downloadAllCertificatesPDF()" class="hidden px-4 py-2 bg-gray-900 hover:bg-black text-white text-xs font-medium transition border border-transparent">
+              <span id="btnDownloadAllText">Download All (PDF)</span>
+            </button>
+          </div>
+
+          <!-- Clearance Matrix -->
+          <div class="mt-6 pt-5 border-t border-gray-100">
+            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Clearance Matrix</p>
+            <div id="stationMatrixPills" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Certificates Grid -->
+        <div id="certificatesGrid" class="space-y-6">
+          <!-- Populated by JS -->
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // PASTE BASE64 GAMBAR SERTIFIKAT BARU-MU DI BAWAH INI (di dalam tanda kutip)
+    const CERT_BG_BASE64 = "__GANTI_DENGAN_KODE_BASE64_GAMBAR_SEBELUMNYA__";
+
+    const STATIONS_CONFIG = [
+      { key: "cashier",      label: "Cashier",       fullLabel: "Front Bar - Cashier" },
+      { key: "orderChecker", label: "Order Checker", fullLabel: "Front Bar - Order Checker" },
+      { key: "barista",      label: "Barista",       fullLabel: "Central Bar - Barista" },
+      { key: "preparation",  label: "Preparation",   fullLabel: "Central Bar - Preparation" },
+      { key: "clearUp",      label: "Clear Up",      fullLabel: "Back Bar - Clear Up" },
+      { key: "stockKeeper",  label: "Stock Keeper",  fullLabel: "Back Bar - Stock Keeper" },
+      { key: "leader",       label: "Leaders",       fullLabel: "Store / Shift Leader" }
+    ];
+
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby4tN3yo3-5Z7o_9alOuoSsfkY2wl0ryZplL09LdT1cxYU9ClieXWZxoKMp-EFlqrPK/exec";
+
+    let allCrewData = [];
+    let filteredCrewData = [];
+    let activeCrewNip = null;
+    let specialFilter = null; // { type: 'pending'|'talent', stationKey: '...' }
+
+    // Utility untuk mapping BaseStation dari Database dengan Station Key di Web
+    function checkIsBaseStation(crew, stKey) {
+        if (!crew.baseStation) return false;
+        const base = crew.baseStation.toUpperCase();
+        switch(stKey) {
+            case 'cashier': return base.includes('CASHIER');
+            case 'orderChecker': return base.includes('ORDER CHECKER') || base.includes('CHECKER');
+            case 'barista': return base.includes('BARISTA');
+            case 'preparation': return base.includes('PREP');
+            case 'clearUp': return base.includes('CLEAR UP');
+            case 'stockKeeper': return base.includes('STOCK') || base.includes('KEEPER');
+            case 'leader': return base.includes('LEADER') || base.includes('SPV') || base.includes('MANAGER');
+            default: return false;
+        }
+    }
+
+    function getPassedStations(crew) {
+      return STATIONS_CONFIG.filter(st => {
+        const data = crew.stations && crew.stations[st.key];
+        return data && String(data.status).trim().toUpperCase() === "LULUS";
+      }).map(st => ({
+        ...st,
+        score: crew.stations[st.key].score || "-"
+      }));
+    }
+
+    async function initApp() {
+      const cachedData = localStorage.getItem("kintoun_crew_data");
+      if (cachedData) {
+        try {
+          allCrewData = JSON.parse(cachedData);
+          if (allCrewData && allCrewData.length > 0) {
+            const badge = document.getElementById("dataSourceBadge");
+            badge.textContent = "LIVE (CACHED)";
+            badge.className = "px-2.5 py-1 text-[10px] font-semibold tracking-wider bg-yellow-50 text-yellow-700 border border-yellow-200";
+            postDataLoad();
+          } else {
+            await refreshData();
+          }
+        } catch (e) {
+          console.error("Failed to parse cache:", e);
+          await refreshData();
+        }
+      } else {
+        await refreshData();
+      }
+    }
+
+    async function refreshData(force = false) {
+      const badge = document.getElementById("dataSourceBadge");
+      const syncIcon = document.getElementById("syncIcon");
+      if (syncIcon) syncIcon.classList.add("animate-spin");
+
+      if(force) {
+          activeCrewNip = null;
+          specialFilter = null; // Reset filters on hard sync
+          renderEmptySelection();
+          document.getElementById("crewListContainer").innerHTML = `<div class="p-6 text-center text-sm text-gray-400">Syncing data...</div>`;
+      }
+
+      if (GAS_WEB_APP_URL && GAS_WEB_APP_URL.startsWith("http")) {
+        try {
+          badge.textContent = "CONNECTING...";
+          badge.className = "px-2.5 py-1 text-[10px] font-semibold tracking-wider bg-blue-50 text-blue-600 border border-blue-200";
+          
+          const res = await fetch(GAS_WEB_APP_URL, { cache: "no-store" });
+          const json = await res.json();
+          
+          if (json && Array.isArray(json.data)) {
+            allCrewData = json.data;
+            localStorage.setItem("kintoun_crew_data", JSON.stringify(allCrewData));
+            badge.textContent = "LIVE API CONNECTED";
+            badge.className = "px-2.5 py-1 text-[10px] font-semibold tracking-wider bg-green-50 text-green-600 border border-green-200";
+          } else {
+            throw new Error("Invalid JSON format");
+          }
+        } catch (err) {
+          console.warn("Failed to fetch live data:", err);
+          
+          // Fallback to cache if exists
+          const cachedData = localStorage.getItem("kintoun_crew_data");
+          if (cachedData) {
+            try {
+              allCrewData = JSON.parse(cachedData);
+              badge.textContent = "FAILED (USING CACHE)";
+              badge.className = "px-2.5 py-1 text-[10px] font-semibold tracking-wider bg-yellow-50 text-yellow-700 border border-yellow-200";
+            } catch(e) {
+              allCrewData = [];
+              badge.textContent = "CONNECTION FAILED";
+              badge.className = "px-2.5 py-1 text-[10px] font-semibold tracking-wider bg-red-50 text-red-600 border border-red-200";
+            }
+          } else {
+            allCrewData = [];
+            badge.textContent = "CONNECTION FAILED";
+            badge.className = "px-2.5 py-1 text-[10px] font-semibold tracking-wider bg-red-50 text-red-600 border border-red-200";
+          }
+        }
+      }
+
+      if (syncIcon) syncIcon.classList.remove("animate-spin");
+      postDataLoad();
+    }
+
+    function postDataLoad() {
+      populateStoreDropdown();
+      populateStationDropdown();
+      updateSummaryKPIs();
+      generateSpecialCards();
+      applyFilters();
+    }
+
+    function populateStoreDropdown() {
+      const select = document.getElementById("storeFilter");
+      const stores = Array.from(new Set(allCrewData.map(c => c.store).filter(Boolean))).sort();
+      select.innerHTML = '<option value="ALL">All Stores</option>';
+      stores.forEach(st => {
+        const opt = document.createElement("option");
+        opt.value = st;
+        opt.textContent = st;
+        select.appendChild(opt);
+      });
+    }
+
+    function populateStationDropdown() {
+      const select = document.getElementById("stationFilter");
+      const baseStations = Array.from(new Set(allCrewData.map(c => c.baseStation).filter(Boolean))).sort();
+      select.innerHTML = '<option value="ALL">All Stations</option>';
+      baseStations.forEach(st => {
+        const opt = document.createElement("option");
+        opt.value = st;
+        opt.textContent = st;
+        select.appendChild(opt);
+      });
+    }
+
+    function updateSummaryKPIs() {
+      let totalCerts = 0;
+      let fullCertifiedCount = 0;
+      const stores = new Set();
+
+      allCrewData.forEach(c => {
+        if (c.store) stores.add(c.store);
+        const passed = getPassedStations(c);
+        totalCerts += passed.length;
+        if (passed.length >= 6) fullCertifiedCount++;
+      });
+
+      document.getElementById("statTotalCrew").textContent = allCrewData.length;
+      document.getElementById("statTotalCerts").textContent = totalCerts;
+      document.getElementById("statFullCrew").textContent = fullCertifiedCount;
+      document.getElementById("statTotalStores").textContent = stores.size;
+    }
+
+    // Generate Accordion Cards
+    function generateSpecialCards() {
+        let pendingHTML = '';
+        let talentHTML = '';
+
+        STATIONS_CONFIG.forEach(st => {
+            let totalBase = 0;
+            let passedBase = 0;
+            let talentCount = 0;
+
+            allCrewData.forEach(crew => {
+                const isBase = checkIsBaseStation(crew, st.key);
+                const stData = crew.stations && crew.stations[st.key];
+                const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
+
+                if (isBase) {
+                    totalBase++;
+                    if (isPassed) passedBase++;
+                } else {
+                    if (isPassed) talentCount++;
+                }
+            });
+
+            // Pending Station (Percentage of Base Station crew who PASSED)
+            // Clicking this filters for those who have NOT passed
+            let completionRate = totalBase === 0 ? 0 : Math.round((passedBase / totalBase) * 100);
+            const isPendingActive = specialFilter && specialFilter.type === 'pending' && specialFilter.stationKey === st.key;
+            
+            pendingHTML += `
+              <div onclick="toggleSpecialFilter('pending', '${st.key}')" 
+                   class="min-w-[120px] p-4 border border-gray-200 cursor-pointer transition flex flex-col justify-between ${isPendingActive ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50'}">
+                <p class="text-[10px] font-semibold uppercase tracking-wider ${isPendingActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
+                <p class="text-2xl font-light mt-2">${completionRate}%</p>
+              </div>
+            `;
+
+            // Talent Pool (Count of Non-Base Station crew who PASSED)
+            if (talentCount > 0) {
+                const isTalentActive = specialFilter && specialFilter.type === 'talent' && specialFilter.stationKey === st.key;
+                talentHTML += `
+                  <div onclick="toggleSpecialFilter('talent', '${st.key}')" 
+                       class="min-w-[120px] p-4 border border-gray-200 cursor-pointer transition flex flex-col justify-between ${isTalentActive ? 'bg-gray-900 text-white' : 'bg-white hover:bg-gray-50'}">
+                    <p class="text-[10px] font-semibold uppercase tracking-wider ${isTalentActive ? 'text-gray-300' : 'text-gray-500'}">${st.label}</p>
+                    <p class="text-2xl font-light mt-2">${talentCount}</p>
+                  </div>
+                `;
+            }
+        });
+
+        document.getElementById("pendingClearanceCards").innerHTML = pendingHTML;
+        document.getElementById("talentPoolCards").innerHTML = talentHTML;
+    }
+
+    function toggleSpecialFilter(type, stationKey) {
+        if (specialFilter && specialFilter.type === type && specialFilter.stationKey === stationKey) {
+            specialFilter = null; // Toggle off
+        } else {
+            specialFilter = { type, stationKey };
+        }
+        generateSpecialCards(); // Re-render to show active state
+        applyFilters();
+    }
+
+    function applyFilters() {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const storeVal = document.getElementById("storeFilter").value;
+      const statusVal = document.getElementById("statusFilter").value;
+      const stationVal = document.getElementById("stationFilter").value;
+
+      filteredCrewData = allCrewData.filter(crew => {
+        // Standard Filters
+        const matchSearch = !q ||
+          String(crew.name).toLowerCase().includes(q) ||
+          String(crew.nip).toLowerCase().includes(q) ||
+          String(crew.storeCode).toLowerCase().includes(q);
+        const matchStore = storeVal === "ALL" || crew.store === storeVal;
+        const matchStation = stationVal === "ALL" || crew.baseStation === stationVal;
+
+        const passed = getPassedStations(crew);
+        let matchStatus = true;
+        if (statusVal === "FULL") matchStatus = passed.length >= 6;
+        else if (statusVal === "HAS_CERT") matchStatus = passed.length >= 1;
+        else if (statusVal === "NO_CERT") matchStatus = passed.length === 0;
+
+        // Special Card Filters
+        let matchSpecial = true;
+        if (specialFilter) {
+            const isBase = checkIsBaseStation(crew, specialFilter.stationKey);
+            const stData = crew.stations && crew.stations[specialFilter.stationKey];
+            const isPassed = stData && String(stData.status).trim().toUpperCase() === "LULUS";
+            
+            if (specialFilter.type === 'pending') {
+                // Show crew who hold the base station BUT HAVE NOT passed it
+                matchSpecial = isBase && !isPassed;
+            } else if (specialFilter.type === 'talent') {
+                // Show crew who DO NOT hold the base station BUT HAVE passed it
+                matchSpecial = !isBase && isPassed;
+            }
+        }
+
+        return matchSearch && matchStore && matchStation && matchStatus && matchSpecial;
+      });
+
+      // Sorting
+      if (statusVal === "FULL") {
+         // Sort by passing length descending (7 first, then 6)
+         filteredCrewData.sort((a, b) => getPassedStations(b).length - getPassedStations(a).length);
+      }
+
+      document.getElementById("filteredCountBadge").textContent = `${filteredCrewData.length} records`;
+      renderCrewDirectory();
+
+      if (filteredCrewData.length > 0) {
+        const stillExists = filteredCrewData.find(c => c.nip === activeCrewNip);
+        selectCrew(stillExists ? stillExists.nip : filteredCrewData[0].nip);
+      } else {
+        renderEmptySelection();
+      }
+    }
+
+    function renderCrewDirectory() {
+      const container = document.getElementById("crewListContainer");
+      if (filteredCrewData.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-sm text-gray-400">No records found.</div>`;
+        return;
+      }
+
+      container.innerHTML = filteredCrewData.map(crew => {
+        const passed = getPassedStations(crew);
+        const isSelected = crew.nip === activeCrewNip;
+        const isFull = passed.length >= 6;
+
+        return `
+          <button
+            onclick="selectCrew('${crew.nip}')"
+            class="w-full text-left p-4 border-b border-gray-100 transition flex items-start justify-between bg-white hover:bg-gray-50 ${
+              isSelected ? 'border-l-4 border-l-gray-900 bg-gray-50' : 'border-l-4 border-l-transparent'
+            }"
+          >
+            <div class="min-w-0 flex-1 pr-2">
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="text-[10px] font-mono text-gray-500">${crew.nip}</span>
+                <span class="text-gray-300">•</span>
+                <span class="text-[10px] font-medium text-gray-500 truncate">${crew.store}</span>
+              </div>
+              <p class="font-semibold text-sm text-gray-900 truncate uppercase">${crew.name}</p>
+              <p class="text-xs text-gray-500 mt-0.5">${crew.baseStation}</p>
+            </div>
+            <div class="flex flex-col items-end shrink-0">
+              <span class="px-2 py-0.5 text-[10px] font-medium ${
+                isFull ? 'bg-gray-900 text-white' : passed.length > 0 ? 'bg-gray-200 text-gray-800' : 'bg-gray-100 text-gray-400'
+              }">
+                ${passed.length}/7
+              </span>
+            </div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectCrew(nip) {
+      activeCrewNip = nip;
+      renderCrewDirectory();
+
+      const crew = allCrewData.find(c => c.nip === nip);
+      if (!crew) return;
+
+      const passed = getPassedStations(crew);
+      const isFull = passed.length >= 6;
+
+      document.getElementById("activeCrewNip").textContent = "NIP: " + crew.nip;
+      document.getElementById("activeCrewStore").textContent = crew.storeCode + " • " + crew.store;
+      document.getElementById("activeCrewStation").textContent = "Role: " + crew.baseStation;
+      document.getElementById("activeCrewName").textContent = crew.name;
+      document.getElementById("activeCrewSub").textContent = `Menampilkan ${passed.length} sertifikat lulus.`;
+
+      const fullBadge = document.getElementById("activeCrewFullBadge");
+      if (isFull) fullBadge.classList.remove("hidden");
+      else fullBadge.classList.add("hidden");
+
+      const btnAll = document.getElementById("btnDownloadAll");
+      if (passed.length > 0) {
+        btnAll.classList.remove("hidden");
+        document.getElementById("btnDownloadAllText").textContent = `Download All (${passed.length} PDF)`;
+      } else {
+        btnAll.classList.add("hidden");
+      }
+
+      // Render Matrix Pills
+      const pillsEl = document.getElementById("stationMatrixPills");
+      pillsEl.innerHTML = STATIONS_CONFIG.map(st => {
+        const stData = (crew.stations && crew.stations[st.key]) || { status: "BELUM SERTIFIKASI", score: "" };
+        const isPassed = String(stData.status).trim().toUpperCase() === "LULUS";
+        const scoreText = stData.score || "-";
+
+        return `
+          <div class="px-3 py-2 border ${isPassed ? 'border-gray-800 bg-gray-50' : 'border-gray-200 bg-white'}">
+            <p class="text-[10px] text-gray-500 mb-1 truncate">${st.label}</p>
+            <div class="flex items-end justify-between">
+              <span class="text-xs font-semibold ${isPassed ? 'text-gray-900' : 'text-gray-400'}">${isPassed ? 'LULUS' : '-'}</span>
+              <span class="text-xs font-mono ${isPassed ? 'text-gray-900' : 'text-gray-400'}">${scoreText}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // Render Certificates Grid
+      const gridEl = document.getElementById("certificatesGrid");
+      if (passed.length === 0) {
+        gridEl.innerHTML = `
+          <div class="bg-white border border-gray-200 p-8 text-center">
+            <p class="text-sm font-medium text-gray-900">Belum Ada Sertifikat</p>
+            <p class="text-xs text-gray-500 mt-1">Kru belum lulus di station manapun.</p>
+          </div>
+        `;
+        return;
+      }
+
+      gridEl.innerHTML = passed.map((st, idx) => `
+        <div class="bg-white border border-gray-200">
+          <div class="px-5 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-medium text-gray-500">0${idx + 1}</span>
+              <div>
+                <h3 class="text-xs font-semibold text-gray-900 tracking-wide">${st.fullLabel}</h3>
+              </div>
+            </div>
+            <button
+              onclick="downloadSingleCertificatePDF('${crew.nip}', '${st.key}')"
+              class="px-3 py-1.5 border border-gray-300 bg-white hover:bg-gray-100 text-gray-900 text-xs font-medium transition"
+            >
+              Export PDF
+            </button>
+          </div>
+          <div class="p-6 bg-white flex justify-center">
+            <div class="cert-canvas" style="background-image: url('${CERT_BG_BASE64}');">
+              <div class="cert-field-name font-cert">${crew.name}</div>
+              <div class="cert-field-station font-cert">${st.label}</div>
+              <div class="cert-field-score font-cert">${st.score}</div>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderEmptySelection() {
+      document.getElementById("activeCrewName").textContent = "Select Crew";
+      document.getElementById("activeCrewSub").textContent = "";
+      document.getElementById("stationMatrixPills").innerHTML = "";
+      document.getElementById("certificatesGrid").innerHTML = "";
+      document.getElementById("btnDownloadAll").classList.add("hidden");
+    }
+
+    // PDF ENGINE
+    async function renderCertificateToDataUrl(crewName, stationLabel, scoreVal) {
+      return new Promise((resolve, reject) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1755;
+        canvas.height = 1240;
+        const ctx = canvas.getContext("2d");
+
+        const bgImg = new Image();
+        bgImg.crossOrigin = "anonymous";
+        bgImg.onload = () => {
+          ctx.drawImage(bgImg, 0, 0, 1755, 1240);
+          ctx.fillStyle = "#0d2137";
+          ctx.textAlign = "center";
+          
+          let fontSizeName = 40;
+          ctx.font = `800 ${fontSizeName}px "Plus Jakarta Sans", sans-serif`;
+          const maxNameWidth = 900;
+          while (ctx.measureText(String(crewName).toUpperCase()).width > maxNameWidth && fontSizeName > 22) {
+            fontSizeName -= 2;
+            ctx.font = `800 ${fontSizeName}px "Plus Jakarta Sans", sans-serif`;
+          }
+          ctx.fillText(String(crewName).toUpperCase(), (140 + 1062) / 2, 614);
+
+          ctx.font = `700 34px "Plus Jakarta Sans", sans-serif`;
+          ctx.fillText(String(stationLabel), (559 + 1062) / 2, 728);
+
+          ctx.font = `800 36px "Plus Jakarta Sans", sans-serif`;
+          ctx.fillText(String(scoreVal), (555 + 1058) / 2, 822);
+
+          resolve(canvas.toDataURL("image/jpeg", 0.95));
+        };
+        bgImg.onerror = reject;
+        bgImg.src = CERT_BG_BASE64;
+      });
+    }
+
+    async function downloadSingleCertificatePDF(nip, stationKey) {
+      const crew = allCrewData.find(c => c.nip === nip);
+      const st = STATIONS_CONFIG.find(s => s.key === stationKey);
+      if (!crew || !st) return;
+
+      const stData = crew.stations[stationKey];
+      const scoreVal = stData && stData.score !== "" ? stData.score : "-";
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const dataUrl = await renderCertificateToDataUrl(crew.name, st.label, scoreVal);
+
+      pdf.addImage(dataUrl, "JPEG", 0, 0, 297, 210);
+      const safeName = crew.name.replace(/[^a-zA-Z0-9]/g, "_");
+      pdf.save(`Certificate_${safeName}_${st.label.replace(/\s+/g, "_")}.pdf`);
+    }
+
+    async function downloadAllCertificatesPDF() {
+      const crew = allCrewData.find(c => c.nip === activeCrewNip);
+      if (!crew) return;
+      const passed = getPassedStations(crew);
+      if (passed.length === 0) return;
+
+      const btnText = document.getElementById("btnDownloadAllText");
+      const originalText = btnText.textContent;
+      btnText.textContent = "Rendering...";
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+      for (let i = 0; i < passed.length; i++) {
+        if (i > 0) pdf.addPage("a4", "landscape");
+        const st = passed[i];
+        const dataUrl = await renderCertificateToDataUrl(crew.name, st.label, st.score);
+        pdf.addImage(dataUrl, "JPEG", 0, 0, 297, 210);
+      }
+
+      const safeName = crew.name.replace(/[^a-zA-Z0-9]/g, "_");
+      pdf.save(`All_Certificates_${safeName}.pdf`);
+      btnText.textContent = originalText;
+    }
+
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
