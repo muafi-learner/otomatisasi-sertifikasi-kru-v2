@@ -9,47 +9,6 @@
   <link rel="icon" type="image/png" href="K-Academy.png" />
   
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- TAILWIND CUSTOM CONFIGURATION: ANIMASI GLOW ITEM GAME -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              black: '#00263f',      
-              white: '#eeebe1',      
-              blue: '#3c586d',       
-              lightblue: '#cfe2f3',  
-              gold: '#d4af37',       
-              sand: '#d6cfbf',       
-              taupe: '#908371',      
-              brown: '#4e312d',      
-            }
-          },
-          keyframes: {
-            'item-glow': {
-              /* Fase Istirahat (Transparan) */
-              '0%, 55%, 100%': { opacity: '0' },
-              
-              /* Muncul perlahan (fade-in) dan DITAHAN agar teks mudah dibaca */
-              '65%, 82%': { opacity: '0.975' },
-              
-              /* Denyut (pulse) meredup lembut ala item loot di game */
-              '86%': { opacity: '0.25' },
-              
-              /* Menerang lagi sebentar sebelum akhirnya memudar (fade-out) */
-              '90%, 95%': { opacity: '0.975' },
-            }
-          },
-          animation: {
-            // Durasi 6 detik: 3.3 detik diam, 2.7 detik pendaran elegan
-            'overlay-blink': 'item-glow 6s ease-in-out infinite',
-          }
-        }
-      }
-    }
-  </script>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -248,12 +207,12 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <details class="group" open>
         <summary class="flex items-center gap-1.5 py-3 cursor-pointer list-none select-none text-[10px] font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-900 transition">
-          <span>Talent Pool</span>
+          <span>Talent Pool <span class="hidden group-open:inline text-gray-400 font-normal lowercase tracking-normal ml-2">(Click card to filter)</span></span>
           <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
           </svg>
         </summary>
-        <div class="pb-4 pt-1 grid grid-cols-1 sm:grid-cols-3 gap-4" id="talentPoolCards">
+        <div class="pb-4 pt-1 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4" id="talentPoolCards">
           <!-- Populated by JS -->
         </div>
       </details>
@@ -348,7 +307,6 @@
     
     // STATE UNTUK INTERAKTIF TALENT POOL
     let talentFilterActive = null; 
-    let hasClickedTalent = false; 
 
     function checkIsBaseStation(crew, stKey) {
         if (!crew.baseStation) return false;
@@ -428,7 +386,6 @@
       if(force) {
           activeCrewNip = null;
           talentFilterActive = null;
-          hasClickedTalent = false;
           
           document.getElementById('stationFilter').disabled = false;
           document.getElementById('statusFilter').disabled = false;
@@ -560,8 +517,6 @@
     }
 
     function toggleTalentFilter(stKey) {
-        hasClickedTalent = true; 
-        
         if (talentFilterActive === stKey) {
             talentFilterActive = null;
             document.getElementById('stationFilter').disabled = false;
@@ -596,20 +551,15 @@
                     totalBase++;
                     if (isPassed) passedBase++;
                 } else {
-                    // LOGIKA TALENT POOL REVISI:
-                    // 1. Leader harus 7/7
-                    // 2. Barista & Prep tidak boleh diisi oleh kru yang jabatannya Leader
                     if (isPassed) {
                         if (st.key === 'leader') {
                             if (getPassedStations(crew).length === 7) {
                                 talentCount++;
                             }
-                        } else if (st.key === 'barista' || st.key === 'preparation') {
+                        } else {
                             if (!isCrewLeader(crew)) {
                                 talentCount++;
                             }
-                        } else {
-                            talentCount++;
                         }
                     }
                 }
@@ -623,25 +573,16 @@
               </div>
             `;
 
-            if (['leader', 'barista', 'preparation'].includes(st.key)) {
-                const isActive = talentFilterActive === st.key;
-                const overlayAnimClass = (!hasClickedTalent && !isActive) ? 'animate-overlay-blink' : 'hidden';
-                
-                const bgClass = isActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-900 border-gray-200 hover:border-gray-400';
-                const textClass = isActive ? 'text-gray-200' : 'text-gray-500';
+            const isActive = talentFilterActive === st.key;
+            const bgClass = isActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-900 border-gray-200 hover:border-gray-400';
+            const textClass = isActive ? 'text-gray-200' : 'text-gray-500';
 
-                talentHTML += `
-                  <button onclick="toggleTalentFilter('${st.key}')" class="relative p-4 border shadow-sm transition-all duration-300 ${bgClass} overflow-hidden">
-                    <div class="flex flex-col items-start justify-center text-left w-full h-full relative z-10">
-                        <p class="text-[10px] font-semibold uppercase tracking-wider transition-colors ${textClass}">${st.label}</p>
-                        <p class="text-3xl font-regular mt-1 transition-colors">${talentCount}</p>
-                    </div>
-                    <div class="absolute inset-0 z-20 bg-gray-900 flex items-center px-4 opacity-0 pointer-events-none ${overlayAnimClass}">
-                        <p class="text-[10px] font-semibold text-white uppercase tracking-widest text-left">Click to filter talent pool</p>
-                    </div>
-                  </button>
-                `;
-            }
+            talentHTML += `
+              <button onclick="toggleTalentFilter('${st.key}')" class="p-4 border flex flex-col items-start justify-center text-left transition-all duration-300 shadow-sm ${bgClass}">
+                <p class="text-[10px] font-semibold uppercase tracking-wider transition-colors ${textClass}">${st.label}</p>
+                <p class="text-3xl font-regular mt-1 transition-colors">${talentCount}</p>
+              </button>
+            `;
         });
 
         document.getElementById("pendingClearanceCards").innerHTML = pendingHTML;
@@ -671,17 +612,14 @@
       filteredCrewData = globalFilteredData.filter(crew => {
         const passed = getPassedStations(crew);
         
-        // JIKA TALENT FILTER SEDANG AKTIF, sesuaikan dengan aturan pengecualian
         if (talentFilterActive) {
             const isBase = checkIsBaseStation(crew, talentFilterActive);
             const isPassed = checkIsPassed(crew, talentFilterActive);
             
             if (talentFilterActive === 'leader') {
                 return !isBase && isPassed && passed.length === 7;
-            } else if (talentFilterActive === 'barista' || talentFilterActive === 'preparation') {
-                return !isBase && isPassed && !isCrewLeader(crew);
             } else {
-                return !isBase && isPassed;
+                return !isBase && isPassed && !isCrewLeader(crew);
             }
         }
         
@@ -723,7 +661,7 @@
     function renderCrewDirectory() {
       const container = document.getElementById("crewListContainer");
       if (filteredCrewData.length === 0) {
-        container.innerHTML = `<div class="p-6 text-center text-sm text-gray-400">No records found.</div>`;
+        container.innerHTML = `<div class="p-6 text-center text-sm text-gray-500">No records found.</div>`;
         return;
       }
 
