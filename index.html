@@ -393,6 +393,11 @@
         return null;
     }
 
+    // Fungsi helper tambahan untuk cek kru leader
+    function isCrewLeader(crew) {
+        return checkIsBaseStation(crew, 'leader');
+    }
+
     async function initApp() {
       const cachedData = localStorage.getItem("kintoun_crew_data");
       if (cachedData) {
@@ -591,9 +596,16 @@
                     totalBase++;
                     if (isPassed) passedBase++;
                 } else {
+                    // LOGIKA TALENT POOL REVISI:
+                    // 1. Leader harus 7/7
+                    // 2. Barista & Prep tidak boleh diisi oleh kru yang jabatannya Leader
                     if (isPassed) {
                         if (st.key === 'leader') {
                             if (getPassedStations(crew).length === 7) {
+                                talentCount++;
+                            }
+                        } else if (st.key === 'barista' || st.key === 'preparation') {
+                            if (!isCrewLeader(crew)) {
                                 talentCount++;
                             }
                         } else {
@@ -613,15 +625,11 @@
 
             if (['leader', 'barista', 'preparation'].includes(st.key)) {
                 const isActive = talentFilterActive === st.key;
-                
-                // Animasi overlay-blink aktif selama user belum pernah mengklik kartu
                 const overlayAnimClass = (!hasClickedTalent && !isActive) ? 'animate-overlay-blink' : 'hidden';
                 
                 const bgClass = isActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-900 border-gray-200 hover:border-gray-400';
                 const textClass = isActive ? 'text-gray-200' : 'text-gray-500';
 
-                // Lapis pertama: Konten normal (Teks & Angka)
-                // Lapis kedua: Overlay gelap (Klik to Filter) yang opacity-nya dianimasikan
                 talentHTML += `
                   <button onclick="toggleTalentFilter('${st.key}')" class="relative p-4 border shadow-sm transition-all duration-300 ${bgClass} overflow-hidden">
                     <div class="flex flex-col items-start justify-center text-left w-full h-full relative z-10">
@@ -663,12 +671,15 @@
       filteredCrewData = globalFilteredData.filter(crew => {
         const passed = getPassedStations(crew);
         
+        // JIKA TALENT FILTER SEDANG AKTIF, sesuaikan dengan aturan pengecualian
         if (talentFilterActive) {
             const isBase = checkIsBaseStation(crew, talentFilterActive);
             const isPassed = checkIsPassed(crew, talentFilterActive);
             
             if (talentFilterActive === 'leader') {
                 return !isBase && isPassed && passed.length === 7;
+            } else if (talentFilterActive === 'barista' || talentFilterActive === 'preparation') {
+                return !isBase && isPassed && !isCrewLeader(crew);
             } else {
                 return !isBase && isPassed;
             }
